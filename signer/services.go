@@ -3,6 +3,7 @@ package signer
 import (
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -33,13 +34,17 @@ func RequireNotRunning(log cometlog.Logger, pidFilePath string) error {
 		return fmt.Errorf("unexpected error parsing PID from PID file: %s. manual deletion of PID file required. %w",
 			pidFilePath, err)
 	}
+	if pid <= 0 || pid > math.MaxInt32 {
+		return fmt.Errorf("invalid PID value in PID file: %s, PID: %d", pidFilePath, pid)
+	}
+	pidInt := int(pid)
 
-	if int(pid) == os.Getpid() {
+	if pidInt == os.Getpid() {
 		panic(fmt.Errorf("error checking PID file: %s, PID: %d matches current process",
 			pidFilePath, pid))
 	}
 
-	process, err := os.FindProcess(int(pid))
+	process, err := os.FindProcess(pidInt)
 	if err != nil {
 		return fmt.Errorf("error checking pid %d: %w", pid, err)
 	}
