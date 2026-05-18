@@ -3,6 +3,7 @@ package signer
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/raft"
@@ -146,6 +147,9 @@ func (rpc *CosignerGRPCServer) GetLeader(
 	*proto.GetLeaderRequest,
 ) (*proto.GetLeaderResponse, error) {
 	leader := rpc.raftStore.GetLeader()
+	if leader < math.MinInt32 || leader > math.MaxInt32 {
+		return &proto.GetLeaderResponse{Leader: -1}, nil
+	}
 	return &proto.GetLeaderResponse{Leader: int32(leader)}, nil
 }
 
